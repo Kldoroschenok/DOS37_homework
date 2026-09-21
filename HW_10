@@ -1,7 +1,8 @@
 В домашней директории созданы необходимые директории и файлы. Создан symlink на `available/app.conf`
 
-```dev@dev-virtual-machine:/home/home_works$ tree -a
-.
+```text
+dev@dev-virtual-machine:/home/home_works$ tree -a
+
 └── lesson_10
     ├── available
     │   ├── app.conf
