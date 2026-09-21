@@ -1,0 +1,16 @@
+В домашней директории созданы необходимые директории и файлы. Создан symlink на `available/app.conf`
+
+```dev@dev-virtual-machine:/home/home_works$ tree -a
+.
+└── lesson_10
+    ├── available
+    │   ├── app.conf
+    │   ├── app.log
+    │   └── readme.md
+    ├── debug
+    ├── enabled
+    │   └── app.conf -> available/app.conf
+    └── logs
+
+6 directories, 4 files
+```
