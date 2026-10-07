@@ -1,0 +1,13 @@
+[Unit]
+Description=Custom HTTP Server App
+After=network.target
+
+[Service]
+User=web-user
+Group=web-user
+WorkingDirectory=/opt/http_server
+ExecStart=/usr/bin/python3 /opt/http_server/http_server.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
