@@ -1,0 +1,14 @@
+[Unit]
+Description=Flask Test Application
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/flask_app
+ExecStart=/usr/bin/python3 /opt/flask_app/app.py
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
