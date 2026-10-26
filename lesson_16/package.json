@@ -1,0 +1,19 @@
+{
+  "name": "diary-app",
+  "version": "1.0.0",
+  "description": "Simple diary with nodejs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "jest --json --outputFile=tests-result.json"
+  },
+  "author": "anestesia",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "express": "^4.19.2",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3"
+  }
+}
+

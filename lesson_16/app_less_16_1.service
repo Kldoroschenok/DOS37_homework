@@ -1,0 +1,14 @@
+[Unit]
+Description=app_1
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/diary-app
+Environment="PORT=3000"
+ExecStart=/usr/bin/node /opt/diary-app/server.js
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
