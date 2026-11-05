@@ -1,0 +1,37 @@
+---
+- name: Lesson 19 - Part 2 (Users and SSH)
+  hosts: localhost
+  become: yes
+  tasks:
+
+    - name: create group devops
+      ansible.builtin.group:
+        name: devops
+        state: present
+
+    - name: create user ecom
+      ansible.builtin.user:
+        name: ecom
+        shell: /bin/bash
+        home: /home/ecom
+        create_home: yes
+        groups: devops
+        append: yes
+
+    - name: create dir /home/ecom/.ssh
+      ansible.builtin.file:
+        path: /home/ecom/.ssh
+        state: directory
+        owner: ecom
+        group: ecom
+        mode: '0700'
+
+    - name: create file authorized_keys
+      ansible.builtin.copy:
+        content: "{{ lookup('file', 'files/ecom_key.pub') }}\n"
+        dest: /home/ecom/.ssh/authorized_keys
+        owner: ecom
+        group: ecom
+        mode: '0600'
+            
+    

@@ -1,0 +1,12 @@
+[Unit]
+Description=Simple Demo Application
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 -m http.server 8080 --directory /opt/demo_app
+Restart=always
+User=www-data
+
+[Install]
+WantedBy=multi-user.target

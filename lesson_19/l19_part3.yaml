@@ -1,0 +1,53 @@
+---
+- name: Lesson 19 - Part 3 (Deploy App)
+  hosts: localhost
+  become: yes
+  tasks:
+
+    - name: Create demoapp user without login
+      ansible.builtin.user:
+        name: demoapp
+        shell: /usr/sbin/nologin
+        create_home: no
+        state: present
+
+    - name: Create /opt/demo_app directory
+      ansible.builtin.file:
+        path: /opt/demo_app
+        state: directory
+        owner: demoapp
+        mode: '0755'
+
+    - name: Copy index.html
+      ansible.builtin.copy:
+        src: files/index.html
+        dest: /opt/demo_app/index.html
+        owner: demoapp
+        mode: '0644'
+
+    - name: Copy systemd unit file
+      ansible.builtin.copy:
+        src: files/demo-app.service
+        dest: /etc/systemd/system/demo-app.service
+        mode: '0644'
+
+    - name: Reload systemd daemon
+      ansible.builtin.systemd:
+        daemon_reload: yes
+
+    - name: Enable and start demo-app service
+      ansible.builtin.systemd:
+        name: demo-app
+        state: started
+        enabled: yes
+
+    - name: Verify app is running
+      ansible.builtin.uri:
+        url: http://localhost:8080
+        return_content: yes
+        status_code: 200
+      register: result
+
+    - name: Print response
+      ansible.builtin.debug:
+        var: result.content
