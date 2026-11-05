@@ -1,0 +1,22 @@
+---
+- name: lesson_19
+  hosts: localhost
+  become: yes
+  tasks:
+    - name: Install packages
+      ansible.builtin.apt:
+        pkg:
+          - tree
+          - jq
+        state: present
+
+    - name: created dir /config
+      ansible.builtin.file:
+        path: /opt/app/config
+        state: directory
+
+    - name: copy file app.conf
+      ansible.builtin.copy:
+        src: files/app.conf
+        dest: /opt/app/config/app.conf
+        mode: '0644'
