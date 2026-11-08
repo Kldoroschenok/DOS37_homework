@@ -1,0 +1,6 @@
+# {{ ansible_managed }}
+# Правила безопасности
+
+{% for rule in auditd_rules %}
+{{ rule }}
+{% endfor %}

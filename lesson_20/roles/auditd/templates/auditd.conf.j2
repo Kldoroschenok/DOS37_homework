@@ -1,0 +1,9 @@
+# {{ ansible_managed }}
+# Настройки auditd
+
+log_file = {{ audit_log_file }}
+max_log_file = {{ audit_max_log_file }}
+num_logs = {{ audit_num_logs }}
+space_left_action = {{ audit_space_left_action }}
+space_left = 75
+admin_space_left = {{ audit_admin_space_left }}

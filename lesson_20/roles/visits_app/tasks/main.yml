@@ -1,0 +1,83 @@
+---
+- name: Install required packages
+  ansible.builtin.apt:
+    name:
+      - postgresql
+      - postgresql-contrib
+      - redis-server
+      - python3-pip
+      - python3-venv
+      - libpq-dev
+    state: present
+    update_cache: yes
+
+- name: Ensure PostgreSQL and Redis are running
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  loop:
+    - postgresql
+    - redis-server
+
+- name: Create app directory
+  ansible.builtin.file:
+    path: /opt/visits
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: '0755'
+
+- name: Copy app files
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: /opt/visits/
+    owner: www-data
+    group: www-data
+    mode: '0644'
+  loop:
+    - app.py
+    - requirements.txt
+    - init.sql
+
+- name: Create .env file
+  ansible.builtin.copy:
+    content: |
+      POSTGRES_DB=visits_db
+      POSTGRES_USER=visitsuser
+      POSTGRES_PASSWORD=visitspass
+      POSTGRES_HOST=localhost
+      REDIS_HOST=localhost
+    dest: /opt/visits/.env
+    owner: www-data
+    group: www-data
+    mode: '0644'
+
+- name: Initialize database
+  ansible.builtin.shell: |
+    sudo -u postgres psql -c "CREATE USER visitsuser WITH PASSWORD 'visitspass';" || true
+    sudo -u postgres psql -c "CREATE DATABASE visits_db OWNER visitsuser;" || true
+    sudo -u postgres psql -d visits_db -f /opt/visits/init.sql || true
+    sudo -u postgres psql -d visits_db -c "ALTER TABLE visits OWNER TO visitsuser;" || true
+
+- name: Create venv and install python dependencies
+  ansible.builtin.shell: |
+    python3 -m venv /opt/visits/.venv
+    /opt/visits/.venv/bin/pip install --upgrade pip
+    /opt/visits/.venv/bin/pip install -r /opt/visits/requirements.txt
+  args:
+    creates: /opt/visits/.venv/bin/python 
+
+- name: Copy systemd unit file
+  ansible.builtin.copy:
+    src: visits.service
+    dest: /etc/systemd/system/visits.service
+    mode: '0644'
+  notify: Restart visits service
+
+- name: Enable and start visits service
+  ansible.builtin.systemd:
+    name: visits
+    state: started
+    enabled: yes
+    daemon_reload: yes

@@ -1,0 +1,15 @@
+[Unit]
+Description=Lesson_20
+After=network.target postgresql.service redis-server.service
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/visits
+EnvironmentFile=/opt/visits/.env
+ExecStart=/opt/visits/.venv/bin/python /opt/visits/app.py
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

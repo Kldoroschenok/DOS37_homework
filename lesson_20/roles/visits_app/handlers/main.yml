@@ -1,0 +1,6 @@
+---
+- name: Restart visits service
+  ansible.builtin.systemd:
+    name: visits
+    state: restarted
+    daemon_reload: yes
