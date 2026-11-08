@@ -1,0 +1,7 @@
+---
+- name: Deploy Shop Application
+  hosts: local
+  become: yes
+  roles:
+    - shop_app
+

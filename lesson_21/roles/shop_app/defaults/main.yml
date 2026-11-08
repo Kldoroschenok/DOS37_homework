@@ -1,0 +1,13 @@
+---
+shop_db_name: "shop_db"
+shop_db_user: "shop_user"
+shop_db_password: "shop_password"
+shop_app_dir: "/opt/shop_app"
+
+shop_services:
+  - name: "catalog"
+    port: 8001
+  - name: "orders"
+    port: 8002
+  - name: "payments"
+    port: 8003

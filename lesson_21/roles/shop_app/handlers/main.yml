@@ -1,0 +1,11 @@
+---
+- name: Restart shop services
+  ansible.builtin.systemd:
+    name: "shop-{{ item.name }}"
+    state: restarted
+  loop: "{{ shop_services }}"
+
+- name: Restart nginx
+  ansible.builtin.systemd:
+    name: nginx
+    state: restarted

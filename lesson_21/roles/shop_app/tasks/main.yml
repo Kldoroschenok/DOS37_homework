@@ -1,0 +1,116 @@
+---
+- name: Install required packages
+  ansible.builtin.apt:
+    name:
+      - postgresql
+      - postgresql-contrib
+      - python3-pip
+      - python3-venv
+      - libpq-dev
+      - nginx
+    state: present
+    update_cache: yes
+
+- name: Ensure PostgreSQL is running
+  ansible.builtin.systemd:
+    name: postgresql
+    state: started
+    enabled: yes
+
+- name: Create database and user
+  ansible.builtin.shell: |
+    sudo -u postgres psql -c "CREATE USER {{ shop_db_user }} WITH PASSWORD '{{ shop_db_password }}';" || true
+    sudo -u postgres psql -c "CREATE DATABASE {{ shop_db_name }} OWNER {{ shop_db_user }};" || true
+
+- name: Create app directory
+  ansible.builtin.file:
+    path: "{{ shop_app_dir }}"
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: '0755'
+
+- name: Copy application code
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ shop_app_dir }}/"
+    owner: www-data
+    group: www-data
+    mode: '0644'
+  loop:
+    - catalog
+    - orders
+    - payments
+    - common
+    - requirements.txt
+
+- name: Create .env file
+  ansible.builtin.copy:
+    content: |
+      DATABASE_URL=postgresql+psycopg://{{ shop_db_user }}:{{ shop_db_password }}@localhost:5432/{{ shop_db_name }}
+      CATALOG_SERVICE_URL=http://127.0.0.1:8001
+      ORDERS_SERVICE_URL=http://127.0.0.1:8002
+      PAYMENTS_SERVICE_URL=http://127.0.0.1:8003
+    dest: "{{ shop_app_dir }}/.env"
+    owner: www-data
+    group: www-data
+    mode: '0644'
+
+- name: Create venv and install requirements
+  ansible.builtin.shell: |
+    python3 -m venv {{ shop_app_dir }}/.venv
+    {{ shop_app_dir }}/.venv/bin/pip install --upgrade pip
+    {{ shop_app_dir }}/.venv/bin/pip install -r {{ shop_app_dir }}/requirements.txt
+  args:
+    creates: "{{ shop_app_dir }}/.venv/bin/python"
+
+- name: Deploy systemd services for microservices
+  ansible.builtin.copy:
+    content: |
+      [Unit]
+      Description=Shop {{ item.name }} Service
+      After=network.target postgresql.service
+      Requires=postgresql.service
+
+      [Service]
+      User=www-data
+      Group=www-data
+      WorkingDirectory={{ shop_app_dir }}
+      EnvironmentFile={{ shop_app_dir }}/.env
+      ExecStart={{ shop_app_dir }}/.venv/bin/uvicorn {{ item.name }}.main:app --host 127.0.0.1 --port {{ item.port }}
+      Restart=on-failure
+
+      [Install]
+      WantedBy=multi-user.target
+    dest: "/etc/systemd/system/shop-{{ item.name }}.service"
+    mode: '0644'
+  loop: "{{ shop_services }}"
+  notify: Restart shop services
+
+- name: Enable and start shop services
+  ansible.builtin.systemd:
+    name: "shop-{{ item.name }}"
+    state: started
+    enabled: yes
+    daemon_reload: yes
+  loop: "{{ shop_services }}"
+
+- name: Deploy Nginx config
+  ansible.builtin.template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/sites-available/shop
+    mode: '0644'
+  notify: Restart nginx
+
+- name: Enable Nginx site
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/shop
+    dest: /etc/nginx/sites-enabled/shop
+    state: link
+  notify: Restart nginx
+
+- name: Remove default Nginx site
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: Restart nginx
