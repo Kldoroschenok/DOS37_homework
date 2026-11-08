@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Ansible
+*.retry
