@@ -1,0 +1,57 @@
+---
+- name: Create system group for node_exporter
+  ansible.builtin.group:
+    name: node_exporter
+    system: yes
+
+- name: Create system user for node_exporter
+  ansible.builtin.user:
+    name: node_exporter
+    group: node_exporter
+    system: yes
+    shell: /usr/sbin/nologin
+    create_home: no
+
+- name: Download Node Exporter archive
+  ansible.builtin.get_url:
+    url: "{{ node_exporter_download_url }}"
+    dest: /tmp/node_exporter.tar.gz
+    mode: '0644'
+
+- name: Extract Node Exporter archive
+  ansible.builtin.unarchive:
+    src: /tmp/node_exporter.tar.gz
+    dest: /tmp
+    remote_src: yes
+    creates: "/tmp/node_exporter-{{ node_exporter_version }}.linux-{{ node_exporter_arch }}"
+
+- name: Install Node Exporter binary
+  ansible.builtin.copy:
+    src: "/tmp/node_exporter-{{ node_exporter_version }}.linux-{{ node_exporter_arch }}/node_exporter"
+    dest: /usr/local/bin/node_exporter
+    mode: '0755'
+    owner: root
+    group: root
+    remote_src: yes
+
+- name: Copy systemd unit file
+  ansible.builtin.copy:
+    src: node_exporter.service
+    dest: /etc/systemd/system/node_exporter.service
+    mode: '0644'
+  notify: Restart node_exporter
+
+- name: Enable and start node_exporter
+  ansible.builtin.systemd:
+    name: node_exporter
+    state: started
+    enabled: yes
+    daemon_reload: yes
+
+- name: Clean up temporary files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /tmp/node_exporter.tar.gz
+    - "/tmp/node_exporter-{{ node_exporter_version }}.linux-{{ node_exporter_arch }}"

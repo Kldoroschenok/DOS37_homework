@@ -1,0 +1,9 @@
+---
+- name: Deploy Visits Application
+  hosts: local
+  become: yes
+  roles:
+    - visits_app
+    - node_exporter
+    - ntp
+    - auditd
