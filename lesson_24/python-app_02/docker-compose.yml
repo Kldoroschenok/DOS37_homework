@@ -1,0 +1,19 @@
+services:
+  app:
+    build: .
+    ports:
+      - "5003:5000"  # Пробрасываем на 5003
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/autoshop
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:latest
+    expose:
+      - "27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:
