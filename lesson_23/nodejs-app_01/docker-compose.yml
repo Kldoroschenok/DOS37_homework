@@ -1,0 +1,23 @@
+services:
+  app:
+    build: .
+    environment:
+      - MEMCACHED_HOST=memcached:11211
+    expose:
+      - "3000"
+    depends_on:
+      - memcached
+
+  memcached:
+    image: memcached:alpine
+    expose:
+      - "11211"
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - app
